@@ -14,8 +14,13 @@ target <- fifa20$target
 test_model <- function(max_depth, nrounds, model = "xgboost",
                        test_data = data, test_target = target) {
   if (model == "xgboost") {
-    param <- list(objective = "reg:squarederror", max_depth = max_depth)
-    xgb_model <- xgboost::xgboost(as.matrix(test_data), params = param, label = target, nrounds = nrounds, verbose = FALSE)
+    xgb_model <- xgboost::xgboost(
+      x = as.matrix(data),
+      y = target,
+      objective = "reg:squarederror",
+      max_depth = 3,
+      nrounds = 200
+    )
     return(xgboost.unify(xgb_model, data))
   } else if (model == "ranger") {
     if (any(is.na(test_data))) stop("ranger does not work with NAa")
