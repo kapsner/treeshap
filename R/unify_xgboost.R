@@ -25,9 +25,13 @@
 #' library(xgboost)
 #' data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
 #' target <- fifa20$target
-#' param <- list(objective = "reg:squarederror", max_depth = 3)
-#' xgb_model <- xgboost::xgboost(as.matrix(data), params = param, label = target,
-#'                               nrounds = 20, verbose = 0)
+#' xgb_model <- xgboost::xgboost(
+#'  x = as.matrix(data),
+#'  y = target,
+#'  objective = "reg:squarederror",
+#'  max_depth = 3,
+#'  nrounds = 20
+#' )
 #' unified_model <- xgboost.unify(xgb_model, as.matrix(data))
 #' shaps <- treeshap(unified_model, data[1:2,])
 #' plot_contribution(shaps, obs = 1)
@@ -35,27 +39,72 @@
 #'
 xgboost.unify <- function(xgb_model, data, recalculate = FALSE) {
   if (!requireNamespace("xgboost", quietly = TRUE)) {
-    stop("Package \"xgboost\" needed for this function to work. Please install it.",
-         call. = FALSE)
+    stop(
+      "Package \"xgboost\" needed for this function to work. Please install it.",
+      call. = FALSE
+    )
   }
   xgbtree <- xgboost::xgb.model.dt.tree(model = xgb_model)
-  stopifnot(c("Tree", "Node", "ID", "Feature", "Split", "Yes", "No", "Missing", "Quality", "Cover") %in% colnames(xgbtree))
+  stopifnot(
+    c(
+      "Tree",
+      "Node",
+      "ID",
+      "Feature",
+      "Split",
+      "Yes",
+      "No",
+      "Missing",
+      "Gain",
+      "Cover"
+    ) %in%
+      colnames(xgbtree)
+  )
   xgbtree$Yes <- match(xgbtree$Yes, xgbtree$ID)
   xgbtree$No <- match(xgbtree$No, xgbtree$ID)
   xgbtree$Missing <- match(xgbtree$Missing, xgbtree$ID)
   xgbtree[is.na(xgbtree$Split), 'Feature'] <- NA
-  xgbtree$Decision.type <- factor(x = rep("<=", times = nrow(xgbtree)), levels = c("<=", "<"))
+  xgbtree$Decision.type <- factor(
+    x = rep("<=", times = nrow(xgbtree)),
+    levels = c("<=", "<")
+  )
   xgbtree$Decision.type[is.na(xgbtree$Feature)] <- NA
-  xgbtree <- xgbtree[, c("Tree", "Node", "Feature", "Decision.type", "Split", "Yes", "No", "Missing", "Quality", "Cover")]
-  colnames(xgbtree) <- c("Tree", "Node", "Feature", "Decision.type", "Split", "Yes", "No", "Missing", "Prediction", "Cover")
+  xgbtree <- xgbtree[, c(
+    "Tree",
+    "Node",
+    "Feature",
+    "Decision.type",
+    "Split",
+    "Yes",
+    "No",
+    "Missing",
+    "Gain",
+    "Cover"
+  )]
+  colnames(xgbtree) <- c(
+    "Tree",
+    "Node",
+    "Feature",
+    "Decision.type",
+    "Split",
+    "Yes",
+    "No",
+    "Missing",
+    "Prediction",
+    "Cover"
+  )
 
   # Here we lose "Quality" information
   xgbtree$Prediction[!is.na(xgbtree$Feature)] <- NA
 
-  feature_names <- xgb_model$feature_names
-  data <- data[,colnames(data) %in% feature_names]
+  feature_names <- xgboost::getinfo(xgb_model, "feature_name")
+  data <- data[, colnames(data) %in% feature_names]
 
-  ret <- list(model = as.data.frame(xgbtree), data = as.data.frame(data), feature_names = feature_names)
+  ret <- list(
+    model = as.data.frame(xgbtree),
+    data = as.data.frame(data),
+    feature_names = feature_names
+  )
   class(ret) <- "model_unified"
   attr(ret, "missing_support") <- TRUE
   attr(ret, "model") <- "xgboost"

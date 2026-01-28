@@ -1,8 +1,13 @@
 library(treeshap)
 data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
 target <- fifa20$target
-param <- list(objective = "reg:squarederror", max_depth = 3)
-xgb_model <- xgboost::xgboost(as.matrix(data), params = param, label = target, nrounds = 200, verbose = 0)
+xgb_model <- xgboost::xgboost(
+  x = as.matrix(data),
+  y = target,
+  objective = "reg:squarederror",
+  max_depth = 3,
+  nrounds = 200
+)
 xgb_tree <- xgboost::xgb.model.dt.tree(model = xgb_model)
 
 
@@ -39,7 +44,7 @@ test_that('values in the columns after xgboost.unify are correct', {
   expect_equal(xgb_tree$Tree, unified_model$Tree)
   expect_equal(xgb_tree$Node, unified_model$Node)
   expect_equal(xgb_tree$Cover, unified_model$Cover)
-  expect_equal(xgb_tree$Quality[xgb_tree$Feature == 'Leaf'], unified_model$Prediction[is.na(unified_model$Feature)])
+  expect_equal(xgb_tree$Gain[xgb_tree$Feature == 'Leaf'], unified_model$Prediction[is.na(unified_model$Feature)])
   expect_equal(xgb_tree$Node, unified_model$Node)
   expect_equal(xgb_tree$Split, unified_model$Split)
   expect_equal(match(xgb_tree$Yes, xgb_tree$ID), unified_model$Yes)
@@ -110,7 +115,7 @@ prepare_original_preds_xgb <- function(orig_tree, test_obs){
 
       i <- i + 1
     }
-    return(tree[['Quality']][indx])
+    return(tree[['Gain']][indx])
   }
   y = numeric()
   for(i in seq_along(test_obs)) {
@@ -138,7 +143,7 @@ test_that("xgboost: predictions from unified == original predictions", {
 })
 
 test_that("xgboost: mean prediction calculated using predict == using covers", {
-  unifier <- xgboost.unify(xgb_model, data)
+  unifier <- xgboost.unify(xgb_model, as.matrix(data))
 
   intercept_predict <- mean(predict(unifier, data))
 

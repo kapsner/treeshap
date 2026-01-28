@@ -30,9 +30,13 @@
 #' library(xgboost)
 #' data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
 #' target <- fifa20$target
-#' param <- list(objective = "reg:squarederror", max_depth = 3)
-#' xgb_model <- xgboost::xgboost(as.matrix(data), params = param, label = target,
-#'                               nrounds = 20, verbose = FALSE)
+#' xgb_model <- xgboost::xgboost(
+#'  x = as.matrix(data),
+#'  y = target,
+#'  objective = "reg:squarederror",
+#'  max_depth = 3,
+#'  nrounds = 20
+#' )
 #' unified_model <- xgboost.unify(xgb_model, as.matrix(data))
 #' x <- head(data, 1)
 #' shap <- treeshap(unified_model, x)
