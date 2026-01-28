@@ -15,13 +15,13 @@ test_model <- function(max_depth, nrounds, model = "xgboost",
                        test_data = data, test_target = target) {
   if (model == "xgboost") {
     xgb_model <- xgboost::xgboost(
-      x = as.matrix(data),
-      y = target,
+      x = as.matrix(test_data),
+      y = test_target,
       objective = "reg:squarederror",
-      max_depth = 3,
-      nrounds = 200
+      max_depth = max_depth,
+      nrounds = nrounds
     )
-    return(xgboost.unify(xgb_model, data))
+    return(xgboost.unify(xgb_model, test_data))
   } else if (model == "ranger") {
     if (any(is.na(test_data))) stop("ranger does not work with NAa")
     rf <- ranger::ranger(test_target ~ ., data = test_data, max.depth = max_depth, num.trees = nrounds)
