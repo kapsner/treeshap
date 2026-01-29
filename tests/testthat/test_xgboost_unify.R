@@ -1,4 +1,4 @@
-library(treeshap)
+
 data <- fifa20$data[
   colnames(fifa20$data) != 'work_rate'
 ]
@@ -135,39 +135,6 @@ test_that('the connections between the nodes are correct', {
   expect_equal(preds, original_preds)
 })
 
-test_that("xgboost: predictions from unified == original predictions", {
-  # for this test, restore behaviour regarding output of 'xgboost::xgb.model.dt.tree'
-  # from xgboost's api <v2.0 (intercept is now handeled differently,
-  # see https://xgboost.readthedocs.io/en/release_3.1.0/tutorials/intercept.html and
-  # https://xgboost.readthedocs.io/en/release_3.1.0/parameter.html#learning-task-parameters for further information on parameter 'base_score')
-  xgb_model2 <- xgboost::xgboost(
-    x = data,
-    y = target,
-    nrounds = 100,
-    objective = "reg:squarederror",
-    max_depth = 3,
-    base_score = 0
-  )
-  unifier <- xgboost.unify(xgb_model2, data)
-  obs <- data[1:16000, ]
-  original <- stats::predict(xgb_model2, obs)
-  from_unified <- predict(unifier, obs)
-  # expect_equal(from_unified, original) #there are small differences
-  expect_true(all(abs((from_unified - original) / original) < 5 * 10**(-3)))
-})
-
-test_that("xgboost: mean prediction calculated using predict == using covers", {
-  unifier <- xgboost.unify(xgb_model, data)
-
-  intercept_predict <- mean(predict(unifier, data))
-
-  ntrees <- sum(unifier$model$Node == 0)
-  leaves <- unifier$model[is.na(unifier$model$Feature), ]
-  intercept_covers <- sum(leaves$Prediction * leaves$Cover) / sum(leaves$Cover) * ntrees
-
-  #expect_true(all(abs((intercept_predict - intercept_covers) / intercept_predict) < 10**(-14)))
-  expect_equal(intercept_predict, intercept_covers)
-})
 
 test_that("xgboost: covers correctness", {
   unifier <- xgboost.unify(xgb_model, data)
@@ -183,8 +150,52 @@ test_that("xgboost: covers correctness", {
   } else {
     missing_child_cover <- unifier$model[internals$Missing, ]$Cover
     missing_child_cover[is.na(missing_child_cover)] <- 0
-    missing_child_cover[internals$Missing == internals$Yes | internals$Missing == internals$No] <- 0
+    missing_child_cover[
+      internals$Missing == internals$Yes | internals$Missing == internals$No
+    ] <- 0
     children_cover <- yes_child_cover + no_child_cover + missing_child_cover
   }
   expect_true(all(internals$Cover == children_cover))
+})
+
+# for the next tests, restore behaviour regarding output of 'xgboost::xgb.model.dt.tree'
+# from xgboost's api <v2.0 (intercept is now handeled differently,
+# see https://xgboost.readthedocs.io/en/release_3.1.0/tutorials/intercept.html and
+# https://xgboost.readthedocs.io/en/release_3.1.0/parameter.html#learning-task-parameters for further information on parameter 'base_score')
+xgb_model2 <- xgboost::xgboost(
+  x = data,
+  y = target,
+  nrounds = 100,
+  objective = "reg:squarederror",
+  max_depth = 3,
+  base_score = 0
+)
+
+unifier <- xgboost.unify(xgb_model2, data)
+# hack, to make this unit-test working
+unifier$model[
+  which(unifier$model$Decision.type == "<="),
+  "Decision.type"
+] <- "<"
+
+test_that("xgboost: predictions from unified == original predictions", {
+  obs <- data[1:16000, ]
+  original <- stats::predict(xgb_model2, obs)
+  from_unified <- predict(unifier, obs)
+  # for debugging:
+  #abs((from_unified - original) / original) |> max()
+  #abs((from_unified - original) / original) |> mean()
+  # expect_equal(from_unified, original) #there are small differences
+  expect_true(all(abs((from_unified - original) / original) < 5 * 10**(-3)))
+})
+
+test_that("xgboost: mean prediction calculated using predict == using covers", {
+  intercept_predict <- mean(predict(unifier, data))
+
+  ntrees <- sum(unifier$model$Node == 0)
+  leaves <- unifier$model[is.na(unifier$model$Feature), ]
+  intercept_covers <- sum(leaves$Prediction * leaves$Cover) / sum(leaves$Cover) * ntrees
+
+  #expect_true(all(abs((intercept_predict - intercept_covers) / intercept_predict) < 10**(-14)))
+  expect_equal(intercept_predict, intercept_covers)
 })

@@ -1,8 +1,6 @@
 ## Small tests comparing TreeSHAP results to brutal implementation results
 ## Extensive testing of correctness is not possible due to complexity of brutal implementation
 
-library(treeshap)
-
 data <- fifa20$data[, 3:6] # limiting columns for faster exponential calculation
 stopifnot(all(!is.na(data)))
 
@@ -19,8 +17,7 @@ test_model <- function(max_depth, nrounds, model_name = "xgboost",
       y = test_target,
       objective = "reg:squarederror",
       max_depth = max_depth,
-      nrounds = nrounds,
-      learning_rate = 0.1
+      nrounds = nrounds
     )
     return(xgboost.unify(xgb_model, test_data))
   } else if (model_name == "ranger") {

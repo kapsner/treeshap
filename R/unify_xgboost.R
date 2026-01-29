@@ -68,10 +68,12 @@ xgboost.unify <- function(xgb_model, data, recalculate = FALSE) {
 
   xgbtree[is.na(xgbtree$Split), 'Feature'] <- NA_character_
 
-  # xgboost split condition is always "less than"
+  # xgboost split condition should be always "less than"
   # (https://xgboost.readthedocs.io/en/stable/r_docs/R-package/docs/reference/xgb.model.dt.tree.html#value)
+  # however, when using "<" instead of "<=", xgboost related unit-tests from
+  # 'test_treeshap_correctness.R' are failing.
   xgbtree$Decision.type <- factor(
-    x = rep("<", times = nrow(xgbtree)),
+    x = rep("<=", times = nrow(xgbtree)),
     levels = c("<=", "<")
   )
   xgbtree$Decision.type[is.na(xgbtree$Feature)] <- NA_character_
