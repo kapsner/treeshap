@@ -1,12 +1,14 @@
 library(treeshap)
-data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
+data <- fifa20$data[
+  colnames(fifa20$data) != 'work_rate'
+]
 target <- fifa20$target
 xgb_model <- xgboost::xgboost(
   x = as.matrix(data),
   y = target,
+  nrounds = 100,
   objective = "reg:squarederror",
-  max_depth = 3,
-  nrounds = 200
+  max_depth = 3
 )
 xgb_tree <- xgboost::xgb.model.dt.tree(model = xgb_model)
 
@@ -134,16 +136,28 @@ test_that('the connections between the nodes are correct', {
 })
 
 test_that("xgboost: predictions from unified == original predictions", {
-  unifier <- xgboost.unify(xgb_model, data)
+  # for this test, restore behaviour regarding output of 'xgboost::xgb.model.dt.tree'
+  # from xgboost's api <v2.0 (intercept is now handeled differently,
+  # see https://xgboost.readthedocs.io/en/release_3.1.0/tutorials/intercept.html and
+  # https://xgboost.readthedocs.io/en/release_3.1.0/parameter.html#learning-task-parameters for further information on parameter 'base_score')
+  xgb_model2 <- xgboost::xgboost(
+    x = as.matrix(data),
+    y = target,
+    nrounds = 10,
+    objective = "reg:squarederror",
+    max_depth = 3,
+    base_score = 0
+  )
+  unifier <- xgboost.unify(xgb_model2, data)
   obs <- data[1:16000, ]
-  original <- stats::predict(xgb_model, as.matrix(obs))
+  original <- stats::predict(xgb_model2, obs)
   from_unified <- predict(unifier, obs)
   # expect_equal(from_unified, original) #there are small differences
   expect_true(all(abs((from_unified - original) / original) < 5 * 10**(-3)))
 })
 
 test_that("xgboost: mean prediction calculated using predict == using covers", {
-  unifier <- xgboost.unify(xgb_model, as.matrix(data))
+  unifier <- xgboost.unify(xgb_model, data)
 
   intercept_predict <- mean(predict(unifier, data))
 

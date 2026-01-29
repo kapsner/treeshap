@@ -44,7 +44,9 @@ xgboost.unify <- function(xgb_model, data, recalculate = FALSE) {
       call. = FALSE
     )
   }
-  xgbtree <- xgboost::xgb.model.dt.tree(model = xgb_model)
+  xgbtree <- xgboost::xgb.model.dt.tree(
+    model = xgb_model
+  )
   stopifnot(
     c(
       "Tree",
@@ -63,12 +65,16 @@ xgboost.unify <- function(xgb_model, data, recalculate = FALSE) {
   xgbtree$Yes <- match(xgbtree$Yes, xgbtree$ID)
   xgbtree$No <- match(xgbtree$No, xgbtree$ID)
   xgbtree$Missing <- match(xgbtree$Missing, xgbtree$ID)
-  xgbtree[is.na(xgbtree$Split), 'Feature'] <- NA
+
+  xgbtree[is.na(xgbtree$Split), 'Feature'] <- NA_character_
+
+  # xgboost split condition is always "less than"
+  # (https://xgboost.readthedocs.io/en/stable/r_docs/R-package/docs/reference/xgb.model.dt.tree.html#value)
   xgbtree$Decision.type <- factor(
-    x = rep("<=", times = nrow(xgbtree)),
+    x = rep("<", times = nrow(xgbtree)),
     levels = c("<=", "<")
   )
-  xgbtree$Decision.type[is.na(xgbtree$Feature)] <- NA
+  xgbtree$Decision.type[is.na(xgbtree$Feature)] <- NA_character_
   xgbtree <- xgbtree[, c(
     "Tree",
     "Node",
@@ -95,7 +101,7 @@ xgboost.unify <- function(xgb_model, data, recalculate = FALSE) {
   )
 
   # Here we lose "Quality" information
-  xgbtree$Prediction[!is.na(xgbtree$Feature)] <- NA
+  xgbtree$Prediction[!is.na(xgbtree$Feature)] <- NA_real_
 
   feature_names <- xgboost::getinfo(xgb_model, "feature_name")
   data <- data[, colnames(data) %in% feature_names]
