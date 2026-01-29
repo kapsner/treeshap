@@ -11,43 +11,70 @@ stopifnot(any(is.na(data_na)))
 
 target <- fifa20$target
 
-test_model <- function(max_depth, nrounds, model = "xgboost",
+test_model <- function(max_depth, nrounds, model_name = "xgboost",
                        test_data = data, test_target = target) {
-  if (model == "xgboost") {
+  if (model_name == "xgboost") {
     xgb_model <- xgboost::xgboost(
-      x = as.matrix(test_data),
+      x = test_data,
       y = test_target,
       objective = "reg:squarederror",
       max_depth = max_depth,
-      nrounds = nrounds
+      nrounds = nrounds,
+      learning_rate = 0.1
     )
     return(xgboost.unify(xgb_model, test_data))
-  } else if (model == "ranger") {
-    if (any(is.na(test_data))) stop("ranger does not work with NAa")
-    rf <- ranger::ranger(test_target ~ ., data = test_data, max.depth = max_depth, num.trees = nrounds)
+  } else if (model_name == "ranger") {
+    if (any(is.na(test_data))) {
+      stop("ranger does not work with NAa")
+    }
+    rf <- ranger::ranger(
+      test_target ~ .,
+      data = test_data,
+      max.depth = max_depth,
+      num.trees = nrounds
+    )
     return(ranger.unify(rf, test_data))
-  } else if (model == "randomForest") {
-    if (any(is.na(test_data))) stop("randomForest does not work with NAa")
-    rf <- randomForest::randomForest(test_target ~ ., data = test_data, maxnodes = 2 ** max_depth, ntree = nrounds)
+  } else if (model_name == "randomForest") {
+    if (any(is.na(test_data))) {
+      stop("randomForest does not work with NAa")
+    }
+    rf <- randomForest::randomForest(
+      test_target ~ .,
+      data = test_data,
+      maxnodes = 2**max_depth,
+      ntree = nrounds
+    )
     return(randomForest.unify(rf, test_data))
-  } else if (model == "gbm") {
+  } else if (model_name == "gbm") {
     gbm_data <- test_data
     gbm_data["gbm_target"] <- test_target
     gbm_model <- gbm::gbm(
-                 formula = gbm_target ~ .,
-                 data = gbm_data,
-                 distribution = "gaussian",
-                 n.trees = nrounds,
-                 interaction.depth = max_depth,
-                 n.cores = 1)
+      formula = gbm_target ~ .,
+      data = gbm_data,
+      distribution = "gaussian",
+      n.trees = nrounds,
+      interaction.depth = max_depth,
+      n.cores = 1
+    )
     return(gbm.unify(gbm_model, gbm_data))
-  } else if (model == "lightgbm") {
-    param_lgbm <- list(objective = "regression", max_depth = max_depth, force_row_wise = TRUE)
-    x <- lightgbm::lgb.Dataset(as.matrix(test_data), label = as.matrix(test_target))
+  } else if (model_name == "lightgbm") {
+    param_lgbm <- list(
+      objective = "regression",
+      max_depth = max_depth,
+      force_row_wise = TRUE
+    )
+    x <- lightgbm::lgb.Dataset(
+      as.matrix(test_data),
+      label = as.matrix(test_target)
+    )
     lgb_data <- lightgbm::lgb.Dataset.construct(x)
-    lgb_model <- lightgbm::lightgbm(data = lgb_data, params = param_lgbm,
-                                    nrounds = nrounds, verbose = -1,
-                                    num_threads = 0)
+    lgb_model <- lightgbm::lightgbm(
+      data = lgb_data,
+      params = param_lgbm,
+      nrounds = nrounds,
+      verbose = -1,
+      num_threads = 0
+    )
     return(lightgbm.unify(lgb_model, as.matrix(test_data)))
   }
 }
@@ -200,8 +227,8 @@ shap_interactions_exponential <- function(unified_model, x) {
 
 
 treeshap_correctness_test <- function(max_depth, nrounds, nobservations,
-                                      model = "xgboost", test_data = data, test_target = target) {
-  model <- test_model(max_depth, nrounds, model, test_data, test_target)
+                                      model_name = "xgboost", test_data = data, test_target = target) {
+  model <- test_model(max_depth, nrounds, model_name, test_data, test_target)
   set.seed(21)
   rows <- sample(nrow(test_data), nobservations)
   shaps_exp <- shap_exponential(model, test_data[rows, ])
@@ -213,8 +240,8 @@ treeshap_correctness_test <- function(max_depth, nrounds, nobservations,
 }
 
 interactions_correctness_test <- function(max_depth, nrounds, nobservations,
-                                          model = "xgboost", test_data = data, test_target = target) {
-  model <- test_model(max_depth, nrounds, model, test_data, test_target)
+                                          model_name = "xgboost", test_data = data, test_target = target) {
+  model <- test_model(max_depth, nrounds, model_name, test_data, test_target)
   set.seed(21)
   rows <- sample(nrow(test_data), nobservations)
   interactions_exp <- shap_interactions_exponential(model, test_data[rows, ])
@@ -271,59 +298,59 @@ test_that("treeshap function checks", {
 
 
 test_that('treeshap correctness test 1 (xgboost, max_depth = 3, nrounds = 1, nobservations = 25)', {
-  expect_true(treeshap_correctness_test(max_depth = 3, nrounds = 1, nobservations = 25, model = "xgboost"))
+  expect_true(treeshap_correctness_test(max_depth = 3, nrounds = 2, nobservations = 25, model_name = "xgboost"))
 })
 
 test_that('treeshap correctness test 2 (xgboost, max_depth = 12, nrounds = 3, nobservations = 5)', {
-  expect_true(treeshap_correctness_test(max_depth = 12, nrounds = 3, nobservations = 5, model = "xgboost"))
+  expect_true(treeshap_correctness_test(max_depth = 12, nrounds = 3, nobservations = 5, model_name = "xgboost"))
 })
 
 test_that('treeshap correctness test 3 (xgboost, max_depth = 7, nrounds = 7, nobservations = 3, with NAs)', {
-  expect_true(treeshap_correctness_test(max_depth = 7, nrounds = 7, nobservations = 3, model = "xgboost", test_data = data_na))
+  expect_true(treeshap_correctness_test(max_depth = 7, nrounds = 7, nobservations = 3, model_name = "xgboost", test_data = data_na))
 })
 
 test_that('treeshap correctness test 4 (ranger, max_depth = 5, nrounds = 7, nobservations = 5)', {
-  expect_true(treeshap_correctness_test(max_depth = 5, nrounds = 7, nobservations = 5, model = "ranger"))
+  expect_true(treeshap_correctness_test(max_depth = 5, nrounds = 7, nobservations = 5, model_name = "ranger"))
 })
 
 test_that('treeshap correctness test 5 (randomForest, max_depth = 3, nrounds = 7, nobservations = 5)', {
-  expect_true(treeshap_correctness_test(max_depth = 3, nrounds = 7, nobservations = 5, model = "randomForest"))
+  expect_true(treeshap_correctness_test(max_depth = 3, nrounds = 7, nobservations = 5, model_name = "randomForest"))
 })
 
 test_that('treeshap correctness test 6 (gbm, max_depth = 3, nrounds = 7, nobservations = 5, with NAs)', {
-  expect_true(treeshap_correctness_test(max_depth = 3, nrounds = 7, nobservations = 5, model = "gbm", test_data = data_na))
+  expect_true(treeshap_correctness_test(max_depth = 3, nrounds = 7, nobservations = 5, model_name = "gbm", test_data = data_na))
 })
 
 test_that('treeshap correctness test 7 (lightgbm, max_depth = 3, nrounds = 7, nobservations = 5, with NAs)', {
-  expect_true(treeshap_correctness_test(max_depth = 3, nrounds = 7, nobservations = 5, model = "lightgbm", test_data = data_na))
+  expect_true(treeshap_correctness_test(max_depth = 3, nrounds = 7, nobservations = 5, model_name = "lightgbm", test_data = data_na))
 })
 
 test_that('interactions correctness test 1 (xgboost, max_depth = 3, nrounds = 1, nobservations = 25)', {
-  expect_true(interactions_correctness_test(max_depth = 3, nrounds = 1, nobservations = 25, model = "xgboost"))
+  expect_true(interactions_correctness_test(max_depth = 3, nrounds = 1, nobservations = 25, model_name = "xgboost"))
 })
 
 test_that('interactions correctness test 2 (xgboost, max_depth = 12, nrounds = 3, nobservations = 5)', {
-  expect_true(interactions_correctness_test(max_depth = 12, nrounds = 3, nobservations = 5, model = "xgboost"))
+  expect_true(interactions_correctness_test(max_depth = 12, nrounds = 3, nobservations = 5, model_name = "xgboost"))
 })
 
 test_that('interactions correctness test 3 (xgboost, max_depth = 7, nrounds = 4, nobservations = 2, with NAs)', {
-  expect_true(interactions_correctness_test(max_depth = 7, nrounds = 4, nobservations = 2, model = "xgboost", test_data = data_na))
+  expect_true(interactions_correctness_test(max_depth = 7, nrounds = 4, nobservations = 2, model_name = "xgboost", test_data = data_na))
 })
 
 test_that('interactions correctness test 4 (ranger, max_depth = 6, nrounds = 4, nobservations = 2)', {
-  expect_true(interactions_correctness_test(max_depth = 6, nrounds = 4, nobservations = 2, model = "ranger"))
+  expect_true(interactions_correctness_test(max_depth = 6, nrounds = 4, nobservations = 2, model_name = "ranger"))
 })
 
 test_that('interactions correctness test 5 (randomForest, max_depth = 4, nrounds = 4, nobservations = 2)', {
-  expect_true(interactions_correctness_test(max_depth = 4, nrounds = 4, nobservations = 2, model = "randomForest"))
+  expect_true(interactions_correctness_test(max_depth = 4, nrounds = 4, nobservations = 2, model_name = "randomForest"))
 })
 
 test_that('interactions correctness test 6 (gbm, max_depth = 4, nrounds = 4, nobservations = 2, with NAs)', {
-  expect_true(interactions_correctness_test(max_depth = 4, nrounds = 4, nobservations = 2, model = "gbm", test_data = data_na))
+  expect_true(interactions_correctness_test(max_depth = 4, nrounds = 4, nobservations = 2, model_name = "gbm", test_data = data_na))
 })
 
 test_that('interactions correctness test 7 (lightgbm, max_depth = 4, nrounds = 4, nobservations = 2, with NAs)', {
-  expect_true(interactions_correctness_test(max_depth = 4, nrounds = 4, nobservations = 2, model = "lightgbm", test_data = data_na))
+  expect_true(interactions_correctness_test(max_depth = 4, nrounds = 4, nobservations = 2, model_name = "lightgbm", test_data = data_na))
 })
 
 test_that('xgboost: shaps sum up to prediction deviation (max_depth = 6, nrounds = 100, nobservations = 40, with NAs)', {
