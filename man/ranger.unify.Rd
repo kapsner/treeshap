@@ -20,7 +20,7 @@ Convert your ranger model into a standardized representation.
 The returned representation is easy to be interpreted by the user and ready to be used as an argument in \code{treeshap()} function.
 }
 \examples{
-
+if (requireNamespace("ranger", quietly = TRUE)) {
  library(ranger)
  data_fifa <- fifa20$data[!colnames(fifa20$data) \%in\%
                             c('work_rate', 'value_eur', 'gk_diving', 'gk_handling',
@@ -31,6 +31,7 @@ The returned representation is easy to be interpreted by the user and ready to b
  unified_model <- ranger.unify(rf, data)
  shaps <- treeshap(unified_model, data[1:2,])
  plot_contribution(shaps, obs = 1)
+}
 }
 \seealso{
 \code{\link{lightgbm.unify}} for \code{\link[lightgbm:lightgbm]{LightGBM models}}

@@ -42,39 +42,42 @@ they are only proxies and may not be fully consistent with the model predictions
 obtained using for example \code{predict} function.
 }
 \examples{
+if (requireNamespace("ranger", quietly = TRUE) &&
+ requireNamespace("survival", quietly = TRUE)) {
 
-library(ranger)
-data_colon <- data.table::data.table(survival::colon)
-data_colon <- na.omit(data_colon[get("etype") == 2, ])
-surv_cols <- c("status", "time", "rx")
-
-feature_cols <- colnames(data_colon)[3:(ncol(data_colon) - 1)]
-
-train_x <- model.matrix(
-  ~ -1 + .,
-  data_colon[, .SD, .SDcols = setdiff(feature_cols, surv_cols[1:2])]
-)
-train_y <- survival::Surv(
-  event = (data_colon[, get("status")] |>
-             as.character() |>
-             as.integer()),
-  time = data_colon[, get("time")],
-  type = "right"
-)
-
-rf <- ranger::ranger(
-  x = train_x,
-  y = train_y,
-  data = data_colon,
-  max.depth = 10,
-  num.trees = 10
-)
-unified_model_risk <- ranger_surv.unify(rf, train_x, type = "risk")
-shaps <- treeshap(unified_model_risk, train_x[1:2,])
-
-# compute shaps for 3 selected time points
-unified_model_surv <- ranger_surv.unify(rf, train_x, type = "survival", times = c(23, 50, 73))
-shaps_surv <- treeshap(unified_model_surv, train_x[1:2,])
+  library(ranger)
+  data_colon <- data.table::data.table(survival::colon)
+  data_colon <- na.omit(data_colon[get("etype") == 2, ])
+  surv_cols <- c("status", "time", "rx")
+ 
+  feature_cols <- colnames(data_colon)[3:(ncol(data_colon) - 1)]
+ 
+  train_x <- model.matrix(
+    ~ -1 + .,
+    data_colon[, .SD, .SDcols = setdiff(feature_cols, surv_cols[1:2])]
+  )
+  train_y <- survival::Surv(
+    event = (data_colon[, get("status")] |>
+               as.character() |>
+               as.integer()),
+    time = data_colon[, get("time")],
+    type = "right"
+  )
+ 
+  rf <- ranger::ranger(
+    x = train_x,
+    y = train_y,
+    data = data_colon,
+    max.depth = 10,
+    num.trees = 10
+  )
+  unified_model_risk <- ranger_surv.unify(rf, train_x, type = "risk")
+  shaps <- treeshap(unified_model_risk, train_x[1:2,])
+ 
+  # compute shaps for 3 selected time points
+  unified_model_surv <- ranger_surv.unify(rf, train_x, type = "survival", times = c(23  , 50, 73))
+  shaps_surv <- treeshap(unified_model_surv, train_x[1:2,])
+}
 
 }
 \seealso{

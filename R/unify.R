@@ -24,6 +24,8 @@
 #' @export
 #'
 #' @examples
+#' if (requireNamespace("ranger", quietly = TRUE) &&
+#'  requireNamespace("randomForest", quietly = TRUE)) {
 #'
 #'  library(ranger)
 #'  data_fifa <- fifa20$data[!colnames(fifa20$data) %in%
@@ -40,6 +42,7 @@
 #'  unified_model2 <- unify(rf2, data)
 #'  shaps2 <- treeshap(unified_model2, data[1:2,])
 #'  plot_contribution(shaps2, obs = 1)
+#' }
 unify <- function(model, data, ...){
   UseMethod("unify", model)
 }
@@ -76,4 +79,3 @@ unify.xgb.Booster <- function(model, data, recalculate = FALSE, ...){
 unify.default <- function(model, data, ...){
   stop("Provided model is not of type supported by treeshap.")
 }
-

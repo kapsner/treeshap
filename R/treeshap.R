@@ -27,41 +27,43 @@
 #'
 #' @examples
 #' \donttest{
-#' library(xgboost)
-#' data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
-#' target <- fifa20$target
-#'
-#' # calculating simple SHAP values
-#' xgb_model <- xgboost::xgboost(
-#'  x = as.matrix(data),
-#'  y = target,
-#'  objective = "reg:squarederror",
-#'  max_depth = 3,
-#'  nrounds = 20
-#' )
-#' unified_model <- xgboost.unify(xgb_model, as.matrix(data))
-#' treeshap1 <- treeshap(unified_model, head(data, 3))
-#' plot_contribution(treeshap1, obs = 1)
-#' treeshap1$shaps
-#'
-#' # It's possible to calcualte explanation over different part of the data set
-#'
-#' unified_model_rec <- set_reference_dataset(unified_model, data[1:1000, ])
-#' treeshap_rec <- treeshap(unified_model, head(data, 3))
-#' plot_contribution(treeshap_rec, obs = 1)
-#'
-#' # calculating SHAP interaction values
-#' xgb_model2 <- xgboost::xgboost(
-#'  x = as.matrix(data),
-#'  y = target,
-#'  objective = "reg:squarederror",
-#'  max_depth = 7,
-#'  nrounds = 10
-#' )
-#' unified_model2 <- xgboost.unify(xgb_model2, as.matrix(data))
-#' treeshap2 <- treeshap(unified_model2, head(data, 3), interactions = TRUE)
-#' treeshap2$interactions
-#' }
+#' if (requireNamespace("xgboost", quietly = TRUE)) {
+#'   library(xgboost)
+#'   data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
+#'   target <- fifa20$target
+#'  
+#'   # calculating simple SHAP values
+#'   xgb_model <- xgboost::xgboost(
+#'    x = as.matrix(data),
+#'    y = target,
+#'    objective = "reg:squarederror",
+#'    max_depth = 3,
+#'    nrounds = 20
+#'   )
+#'   unified_model <- xgboost.unify(xgb_model, as.matrix(data))
+#'   treeshap1 <- treeshap(unified_model, head(data, 3))
+#'   plot_contribution(treeshap1, obs = 1)
+#'   treeshap1$shaps
+#'  
+#'   # It's possible to calcualte explanation over different part of the data set
+#'  
+#'   unified_model_rec <- set_reference_dataset(unified_model, data[1:1000, ])
+#'   treeshap_rec <- treeshap(unified_model, head(data, 3))
+#'   plot_contribution(treeshap_rec, obs = 1)
+#'  
+#'   # calculating SHAP interaction values
+#'   xgb_model2 <- xgboost::xgboost(
+#'    x = as.matrix(data),
+#'    y = target,
+#'    objective = "reg:squarederror",
+#'    max_depth = 7,
+#'    nrounds = 10
+#'   )
+#'   unified_model2 <- xgboost.unify(xgb_model2, as.matrix(data))
+#'   treeshap2 <- treeshap(unified_model2, head(data, 3), interactions = TRUE)
+#'   treeshap2$interactions
+#' }}
+#' 
 treeshap <- function(unified_model, x, interactions = FALSE, verbose = TRUE) {
   UseMethod("treeshap", unified_model)
 }

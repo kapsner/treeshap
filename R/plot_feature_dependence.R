@@ -21,23 +21,31 @@
 #'
 #' @examples
 #' \donttest{
-#' library(xgboost)
-#' data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
-#' target <- fifa20$target
-#' xgb_model <- xgboost::xgboost(
-#'  x = as.matrix(data),
-#'  y = target,
-#'  objective = "reg:squarederror",
-#'  max_depth = 3,
-#'  nrounds = 20
-#' )
-#' unified_model <- xgboost.unify(xgb_model, as.matrix(data))
-#' x <- head(data, 100)
-#' shaps <- treeshap(unified_model, x)
-#' plot_feature_dependence(shaps, variable = "overall")
-#' }
+#' if (requireNamespace("xgboost", quietly = TRUE) &&
+#'  requireNamespace("scales", quietly = TRUE)) {
+#'   library(xgboost)
+#'   data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
+#'   target <- fifa20$target
+#'   xgb_model <- xgboost::xgboost(
+#'    x = as.matrix(data),
+#'    y = target,
+#'    objective = "reg:squarederror",
+#'    max_depth = 3,
+#'    nrounds = 20
+#'   )
+#'   unified_model <- xgboost.unify(xgb_model, as.matrix(data))
+#'   x <- head(data, 100)
+#'   shaps <- treeshap(unified_model, x)
+#'   plot_feature_dependence(shaps, variable = "overall")
+#' }}
 plot_feature_dependence <- function(treeshap, variable,
                                     title = "Feature Dependence", subtitle = NULL) {
+  if (!requireNamespace("scales", quietly = TRUE)) {
+    stop(
+      "Package \"scales\" needed for this function to work. Please install it.",
+      call. = FALSE
+    )
+  }
 
   shaps <- treeshap$shaps
   x <- treeshap$observations

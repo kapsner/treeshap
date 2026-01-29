@@ -21,6 +21,8 @@ Convert your tree-based model into a standardized representation.
 The returned representation is easy to be interpreted by the user and ready to be used as an argument in \code{treeshap()} function.
 }
 \examples{
+if (requireNamespace("ranger", quietly = TRUE) &&
+ requireNamespace("randomForest", quietly = TRUE)) {
 
  library(ranger)
  data_fifa <- fifa20$data[!colnames(fifa20$data) \%in\%
@@ -37,6 +39,7 @@ The returned representation is easy to be interpreted by the user and ready to b
  unified_model2 <- unify(rf2, data)
  shaps2 <- treeshap(unified_model2, data[1:2,])
  plot_contribution(shaps2, obs = 1)
+}
 }
 \seealso{
 \code{\link{lightgbm.unify}} for \code{\link[lightgbm:lightgbm]{LightGBM models}}

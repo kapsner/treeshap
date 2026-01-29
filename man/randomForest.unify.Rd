@@ -24,16 +24,18 @@ Binary classification models with a target variable that is a factor with two le
 }
 \examples{
 
-library(randomForest)
-data_fifa <- fifa20$data[!colnames(fifa20$data) \%in\%
-                           c('work_rate', 'value_eur', 'gk_diving', 'gk_handling',
-                             'gk_kicking', 'gk_reflexes', 'gk_speed', 'gk_positioning')]
-data <- na.omit(cbind(data_fifa, target = fifa20$target))
-
-rf <- randomForest::randomForest(target~., data = data, maxnodes = 10, ntree = 10)
-unified_model <- randomForest.unify(rf, data)
-shaps <- treeshap(unified_model, data[1:2,])
-# plot_contribution(shaps, obs = 1)
+if (requireNamespace("randomForest", quietly = TRUE)) {
+  library(randomForest)
+  data_fifa <- fifa20$data[!colnames(fifa20$data) \%in\%
+                             c('work_rate', 'value_eur', 'gk_diving', 'gk_handling',
+                               'gk_kicking', 'gk_reflexes', 'gk_speed', 'gk  _positioning')]
+  data <- na.omit(cbind(data_fifa, target = fifa20$target))
+ 
+  rf <- randomForest::randomForest(target~., data = data, maxnodes = 10, ntree = 10)
+  unified_model <- randomForest.unify(rf, data)
+  shaps <- treeshap(unified_model, data[1:2,])
+  # plot_contribution(shaps, obs = 1)
+}
 
 }
 \seealso{

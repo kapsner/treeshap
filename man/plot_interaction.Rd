@@ -32,19 +32,21 @@ Value of the second variable is marked with the color.
 }
 \examples{
 \donttest{
-data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
-target <- fifa20$target
-xgb_model2 <- xgboost::xgboost(
- x = as.matrix(data),
- y = target,
- objective = "reg:squarederror",
- max_depth = 5,
- nrounds = 10
-)
-unified_model2 <- xgboost.unify(xgb_model2, data)
-inters <- treeshap(unified_model2, as.matrix(data[1:50, ]), interactions = TRUE)
-plot_interaction(inters, "dribbling", "defending")
-}
+if (requireNamespace("xgboost", quietly = TRUE) &&
+ requireNamespace("scales", quietly = TRUE)) {
+  data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
+  target <- fifa20$target
+  xgb_model2 <- xgboost::xgboost(
+   x = as.matrix(data),
+   y = target,
+   objective = "reg:squarederror",
+   max_depth = 5,
+   nrounds = 10
+  )
+  unified_model2 <- xgboost.unify(xgb_model2, data)
+  inters <- treeshap(unified_model2, as.matrix(data[1:50, ]), interactions = TRUE)
+  plot_interaction(inters, "dribbling", "defending")
+}}
 }
 \seealso{
 \code{\link{treeshap}} for calculation of SHAP Interaction values
