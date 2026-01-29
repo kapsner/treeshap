@@ -1,4 +1,3 @@
-library(treeshap)
 
 data_colon <- data.table::data.table(survival::colon)
 data_colon <- na.omit(data_colon[get("etype") == 2, ])

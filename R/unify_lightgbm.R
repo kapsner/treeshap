@@ -67,19 +67,58 @@ lightgbm.unify <- function(lgb_model, data, recalculate = FALSE) {
   # On the basis of column 'Parent', create columns with childs: 'Yes', 'No' and 'Missing' like in the xgboost df:
   ret.first <- function(x) x[1]
   ret.second <- function(x) x[2]
-  tmp <- data.table::merge.data.table(df[, .(node_parent, tree_index, split_index)], df[, .(tree_index, split_index, default_left, decision_type)],
-                                      by.x = c("tree_index", "node_parent"), by.y = c("tree_index", "split_index"))
-  y_n_m <- unique(tmp[, .(Yes = ifelse(decision_type %in% c("<=", "<"), ret.first(split_index),
-                                       ifelse(decision_type %in% c(">=", ">"), ret.second(split_index), stop("Unknown decision_type"))),
-                          No = ifelse(decision_type %in% c(">=", ">"), ret.first(split_index),
-                                      ifelse(decision_type %in% c("<=", "<"), ret.second(split_index), stop("Unknown decision_type"))),
-                          Missing = ifelse(default_left, ret.first(split_index),ret.second(split_index)),
-                          decision_type = decision_type),
-                      .(tree_index, node_parent)])
-  df <- data.table::merge.data.table(df[, c("tree_index", "depth", "split_index", "split_feature", "node_parent", "split_gain",
-                                            "threshold", "internal_value", "internal_count")],
-                                     y_n_m, by.x = c("tree_index", "split_index"),
-                                     by.y = c("tree_index", "node_parent"), all.x = TRUE)
+  tmp <- data.table::merge.data.table(
+    df[, .(node_parent, tree_index, split_index)],
+    df[, .(tree_index, split_index, default_left, decision_type)],
+    by.x = c("tree_index", "node_parent"),
+    by.y = c("tree_index", "split_index")
+  )
+  y_n_m <- unique(tmp[,
+    .(
+      Yes = ifelse(
+        decision_type %in% c("<=", "<"),
+        ret.first(split_index),
+        ifelse(
+          decision_type %in% c(">=", ">"),
+          ret.second(split_index),
+          stop("Unknown decision_type")
+        )
+      ),
+      No = ifelse(
+        decision_type %in% c(">=", ">"),
+        ret.first(split_index),
+        ifelse(
+          decision_type %in% c("<=", "<"),
+          ret.second(split_index),
+          stop("Unknown decision_type")
+        )
+      ),
+      Missing = ifelse(
+        default_left,
+        ret.first(split_index),
+        ret.second(split_index)
+      ),
+      decision_type = decision_type
+    ),
+    .(tree_index, node_parent)
+  ])
+  df <- data.table::merge.data.table(
+    df[, c(
+      "tree_index",
+      "depth",
+      "split_index",
+      "split_feature",
+      "node_parent",
+      "split_gain",
+      "threshold",
+      "internal_value",
+      "internal_count"
+    )],
+    y_n_m,
+    by.x = c("tree_index", "split_index"),
+    by.y = c("tree_index", "node_parent"),
+    all.x = TRUE
+  )
   df[decision_type == ">=", decision_type := "<"]
   df[decision_type == ">", decision_type := "<="]
   df$Decision.type <- factor(x = df$decision_type, levels = c("<=", "<"))

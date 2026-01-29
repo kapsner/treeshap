@@ -1,4 +1,4 @@
-library(treeshap)
+
 param_lightgbm <- list(objective = "regression",
                        max_depth = 3,
                        force_row_wise = TRUE,

@@ -1,5 +1,4 @@
-library(treeshap)
-library(xgboost)
+
 data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
 target <- fifa20$target
 

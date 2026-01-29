@@ -1,4 +1,3 @@
-library(treeshap)
 
 data_fifa <- fifa20$data[!colnames(fifa20$data) %in%
                            c('value_eur', 'gk_diving', 'gk_handling',
