@@ -298,7 +298,7 @@ test_that("treeshap function checks", {
 
 
 test_that('treeshap correctness test 1 (xgboost, max_depth = 3, nrounds = 1, nobservations = 25)', {
-  expect_true(treeshap_correctness_test(max_depth = 3, nrounds = 2, nobservations = 25, model_name = "xgboost"))
+  expect_true(treeshap_correctness_test(max_depth = 3, nrounds = 1, nobservations = 25, model_name = "xgboost"))
 })
 
 test_that('treeshap correctness test 2 (xgboost, max_depth = 12, nrounds = 3, nobservations = 5)', {

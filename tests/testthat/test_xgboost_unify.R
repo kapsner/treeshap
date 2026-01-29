@@ -141,9 +141,9 @@ test_that("xgboost: predictions from unified == original predictions", {
   # see https://xgboost.readthedocs.io/en/release_3.1.0/tutorials/intercept.html and
   # https://xgboost.readthedocs.io/en/release_3.1.0/parameter.html#learning-task-parameters for further information on parameter 'base_score')
   xgb_model2 <- xgboost::xgboost(
-    x = as.matrix(data),
+    x = data,
     y = target,
-    nrounds = 10,
+    nrounds = 100,
     objective = "reg:squarederror",
     max_depth = 3,
     base_score = 0

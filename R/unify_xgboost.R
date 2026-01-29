@@ -71,7 +71,7 @@ xgboost.unify <- function(xgb_model, data, recalculate = FALSE) {
   # xgboost split condition is always "less than"
   # (https://xgboost.readthedocs.io/en/stable/r_docs/R-package/docs/reference/xgb.model.dt.tree.html#value)
   xgbtree$Decision.type <- factor(
-    x = rep("<=", times = nrow(xgbtree)),
+    x = rep("<", times = nrow(xgbtree)),
     levels = c("<=", "<")
   )
   xgbtree$Decision.type[is.na(xgbtree$Feature)] <- NA_character_
