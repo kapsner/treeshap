@@ -1,37 +1,37 @@
 
 if (requireNamespace("randomForest", quietly = TRUE)) {
 
-data_fifa <- fifa20$data[!colnames(fifa20$data) %in%
-                           c('value_eur', 'gk_diving', 'gk_handling',
-                             'gk_kicking', 'gk_reflexes', 'gk_speed', 'gk_positioning')]
-x <- na.omit(cbind(data_fifa, target = fifa20$target))
+  data_fifa <- fifa20$data[!colnames(fifa20$data) %in%
+                            c('value_eur', 'gk_diving', 'gk_handling',
+                              'gk_kicking', 'gk_reflexes', 'gk_speed', 'gk_positioning')]
+  x <- na.omit(cbind(data_fifa, target = fifa20$target))
 
-rf_with_cat_model <- randomForest::randomForest(target~., data = x, maxnodes = 10, ntree = 10)
+  rf_with_cat_model <- randomForest::randomForest(target~., data = x, maxnodes = 10, ntree = 10)
 
-x <- x[colnames(x) != 'work_rate']
-
-
-rf_num_model <- randomForest::randomForest(target~., data = x, maxnodes = 10, ntree = 10)
+  x <- x[colnames(x) != 'work_rate']
 
 
-test_that('randomForest.unify creates an object of the appropriate class', {
-  expect_true(is.model_unified(randomForest.unify(rf_num_model, x)))
-  expect_true(is.model_unified(unify(rf_num_model, x)))
-})
+  rf_num_model <- randomForest::randomForest(target~., data = x, maxnodes = 10, ntree = 10)
 
-test_that('randomForest.unify returns an object with correct attributes', {
-  unified_model <- randomForest.unify(rf_num_model, x)
 
-  expect_equal(attr(unified_model, "missing_support"), FALSE)
-  expect_equal(attr(unified_model, "model"), "randomForest")
-})
+  test_that('randomForest.unify creates an object of the appropriate class', {
+    expect_true(is.model_unified(randomForest.unify(rf_num_model, x)))
+    expect_true(is.model_unified(unify(rf_num_model, x)))
+  })
 
-test_that('the randomForest.unify function returns data frame with columns of appropriate column', {
-  unifier <- randomForest.unify(rf_num_model, x)$model
-  expect_true(is.integer(unifier$Tree))
-  expect_true(is.integer(unifier$Node))
-  expect_true(is.character(unifier$Feature))
-    expect_true(is.factor(unifier$Decision.type))gbm
+  test_that('randomForest.unify returns an object with correct attributes', {
+    unified_model <- randomForest.unify(rf_num_model, x)
+
+    expect_equal(attr(unified_model, "missing_support"), FALSE)
+    expect_equal(attr(unified_model, "model"), "randomForest")
+  })
+
+  test_that('the randomForest.unify function returns data frame with columns of appropriate column', {
+    unifier <- randomForest.unify(rf_num_model, x)$model
+    expect_true(is.integer(unifier$Tree))
+    expect_true(is.integer(unifier$Node))
+    expect_true(is.character(unifier$Feature))
+    expect_true(is.factor(unifier$Decision.type))
     expect_true(is.numeric(unifier$Split))
     expect_true(is.integer(unifier$Yes))
     expect_true(is.integer(unifier$No))

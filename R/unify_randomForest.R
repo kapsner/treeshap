@@ -13,8 +13,6 @@
 #'
 #' @import data.table
 #'
-#' @export
-#'
 #' @seealso
 #' \code{\link{lightgbm.unify}} for \code{\link[lightgbm:lightgbm]{LightGBM models}}
 #'
@@ -25,38 +23,68 @@
 #' \code{\link{ranger.unify}} for \code{\link[ranger:ranger]{ranger models}}
 #'
 #' @examples
-#'
 #' if (requireNamespace("randomForest", quietly = TRUE)) {
 #'   library(randomForest)
-#'   data_fifa <- fifa20$data[!colnames(fifa20$data) %in%
-#'                              c('work_rate', 'value_eur', 'gk_diving', 'gk_handling',
-#'                                'gk_kicking', 'gk_reflexes', 'gk_speed', 'gk  _positioning')]
+#'   data_fifa <- fifa20$data[
+#'     !colnames(fifa20$data) %in%
+#'       c(
+#'         'work_rate',
+#'         'value_eur',
+#'         'gk_diving',
+#'         'gk_handling',
+#'         'gk_kicking',
+#'         'gk_reflexes',
+#'         'gk_speed',
+#'         'gk_positioning'
+#'       )
+#'   ]
 #'   data <- na.omit(cbind(data_fifa, target = fifa20$target))
-#'  
-#'   rf <- randomForest::randomForest(target~., data = data, maxnodes = 10, ntree = 10)
+#'
+#'   rf <- randomForest::randomForest(
+#'     target ~ .,
+#'     data = data,
+#'     maxnodes = 10,
+#'     ntree = 10
+#'   )
 #'   unified_model <- randomForest.unify(rf, data)
-#'   shaps <- treeshap(unified_model, data[1:2,])
-#'   # plot_contribution(shaps, obs = 1)
+#'   shaps <- treeshap(unified_model, data[1:2, ])
+#'    # plot_contribution(shaps, obs = 1)
 #' }
 #'
+#' @export
+#'
 randomForest.unify <- function(rf_model, data) {
-  if(!inherits(rf_model,'randomForest')){stop('Object rf_model was not of class "randomForest"')}
-  if(any(attr(rf_model$terms, "dataClasses")[-1] != "numeric")) {
-    stop('Models built on data with categorical features are not supported - please encode them before training.')
+  if (!inherits(rf_model, 'randomForest')) {
+    stop('Object rf_model was not of class "randomForest"')
+  }
+  if (any(attr(rf_model$terms, "dataClasses")[-1] != "numeric")) {
+    stop(
+      'Models built on data with categorical features are not supported - please encode them before training.'
+    )
   }
   n <- rf_model$ntree
   ret <- data.table()
   prediction <- NULL
-  x <- lapply(1:n, function(tree){
-    tree_data <- as.data.table(randomForest::getTree(rf_model, k = tree, labelVar = TRUE))
-    tree_data <- tree_data[ , prediction:=as.numeric(prediction)]
-    tree_data[, c("left daughter", "right daughter", "split var", "split point", "prediction")]
+  x <- lapply(1:n, function(tree) {
+    tree_data <- as.data.table(randomForest::getTree(
+      rf_model,
+      k = tree,
+      labelVar = TRUE
+    ))
+    tree_data <- tree_data[, prediction := as.numeric(prediction)]
+    tree_data[, c(
+      "left daughter",
+      "right daughter",
+      "split var",
+      "split point",
+      "prediction"
+    )]
   })
   times_vec <- sapply(x, nrow)
   y <- rbindlist(x)
   y[, Tree := rep(0:(n - 1), times = times_vec)]
   y[, Node := unlist(lapply(times_vec, function(x) 0:(x - 1)))]
-  setnames(y, c("Yes", "No", "Feature", "Split",  "Prediction", "Tree", "Node"))
+  setnames(y, c("Yes", "No", "Feature", "Split", "Prediction", "Tree", "Node"))
   y[, Feature := as.character(Feature)]
   y[, Yes := Yes - 1]
   y[, No := No - 1]
@@ -71,7 +99,10 @@ randomForest.unify <- function(rf_model, data) {
 
   y$Cover <- 0
 
-  y$Decision.type <- factor(x = rep("<=", times = nrow(y)), levels = c("<=", "<"))
+  y$Decision.type <- factor(
+    x = rep("<=", times = nrow(y)),
+    levels = c("<=", "<")
+  )
   y[is.na(Feature), Decision.type := NA]
 
   # Here we lose "Quality" information
@@ -82,12 +113,29 @@ randomForest.unify <- function(rf_model, data) {
   # so here we correct it by adjusting leaf prediction values
   y[is.na(Feature), Prediction := Prediction / n]
 
-
-  setcolorder(y, c("Tree", "Node", "Feature", "Decision.type", "Split", "Yes", "No", "Missing", "Prediction", "Cover"))
+  setcolorder(
+    y,
+    c(
+      "Tree",
+      "Node",
+      "Feature",
+      "Decision.type",
+      "Split",
+      "Yes",
+      "No",
+      "Missing",
+      "Prediction",
+      "Cover"
+    )
+  )
   feature_names <- rownames(rf_model$importance)
-  data <- data[,colnames(data) %in% feature_names]
+  data <- data[, colnames(data) %in% feature_names]
 
-  ret <- list(model = as.data.frame(y), data = as.data.frame(data), feature_names = feature_names)
+  ret <- list(
+    model = as.data.frame(y),
+    data = as.data.frame(data),
+    feature_names = feature_names
+  )
   class(ret) <- "model_unified"
   attr(ret, "missing_support") <- FALSE
   attr(ret, "model") <- "randomForest"
