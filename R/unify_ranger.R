@@ -9,8 +9,6 @@
 #'
 #' @return a unified model representation - a \code{\link{model_unified.object}} object
 #'
-#' @import data.table
-#'
 #' @export
 #'
 #' @seealso

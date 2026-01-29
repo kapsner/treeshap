@@ -12,8 +12,6 @@
 #'
 #' @export
 #'
-#' @import data.table
-#'
 #' @seealso
 #'
 #' \code{\link{gbm.unify}} for \code{\link[gbm:gbm]{GBM models}}

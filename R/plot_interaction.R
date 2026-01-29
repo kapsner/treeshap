@@ -13,8 +13,6 @@
 #'
 #' @export
 #'
-#' @import ggplot2
-#'
 #' @seealso
 #' \code{\link{treeshap}} for calculation of SHAP Interaction values
 #'

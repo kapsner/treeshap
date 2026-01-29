@@ -13,9 +13,6 @@
 #' @return a \code{ggplot2} object
 #'
 #' @export
-#' @import ggplot2
-#' @importFrom stats reorder
-#' @importFrom graphics text
 #'
 #' @seealso
 #' \code{\link{treeshap}} for calculation of SHAP values

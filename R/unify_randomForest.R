@@ -11,8 +11,6 @@
 #'
 #' @return a unified model representation - a \code{\link{model_unified.object}} object
 #'
-#' @import data.table
-#'
 #' @seealso
 #' \code{\link{lightgbm.unify}} for \code{\link[lightgbm:lightgbm]{LightGBM models}}
 #'

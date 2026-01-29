@@ -25,9 +25,6 @@
 #'
 #' @return For `type = "risk"` a unified model representation is returned - a \code{\link{model_unified.object}} object. For `type = "survival"` or `type = "chf"` - a \code{\link{model_unified_multioutput.object}} object is returned, which is a list that contains unified model representation (\code{\link{model_unified.object}} object) for each time point. In this case, the list names are time points at which the survival function was evaluated.
 #'
-#' @import data.table
-#' @importFrom stats stepfun
-#'
 #' @export
 #'
 #' @seealso

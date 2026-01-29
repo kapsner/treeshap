@@ -13,10 +13,6 @@
 #'
 #' @export
 #'
-#' @importFrom Rcpp sourceCpp
-#' @importFrom utils setTxtProgressBar txtProgressBar
-#' @useDynLib treeshap
-#'
 #' @seealso
 #' \code{\link{xgboost.unify}} for \code{XGBoost models}
 #' \code{\link{lightgbm.unify}} for \code{LightGBM models}
