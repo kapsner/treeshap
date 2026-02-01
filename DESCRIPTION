@@ -1,7 +1,7 @@
 Package: treeshap
 Title: Compute SHAP Values for Your Tree-Based Models Using the 'TreeSHAP'
     Algorithm
-Version: 0.3.1.9000
+Version: 0.3.2
 Authors@R: c(
     person("Konrad", "Komisarczyk", email = "komisarczykkonrad@gmail.com", role = "aut"),
     person("Pawel", "Kozminski", email = "pkozminski99@gmail.com", role = "aut"),
@@ -21,7 +21,7 @@ URL: https://modeloriented.github.io/treeshap/,
     https://github.com/ModelOriented/treeshap
 BugReports: https://github.com/ModelOriented/treeshap/issues
 Depends: 
-    R (>= 2.10)
+    R (>= 4.1.0)
 Imports: 
     data.table,
     ggplot2,
@@ -41,4 +41,4 @@ LinkingTo:
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.3

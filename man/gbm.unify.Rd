@@ -21,20 +21,21 @@ The returned representation is easy to be interpreted by the user and ready to b
 }
 \examples{
 \donttest{
-library(gbm)
-data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
-data['value_eur'] <- fifa20$target
-gbm_model <- gbm::gbm(
-             formula = value_eur ~ .,
-             data = data,
-             distribution = "gaussian",
-             n.trees = 20,
-             interaction.depth = 4,
-             n.cores = 1)
-unified_model <- gbm.unify(gbm_model, data)
-shaps <- treeshap(unified_model, data[1:2,])
-plot_contribution(shaps, obs = 1)
-}
+if (requireNamespace("gbm", quietly = TRUE)) {
+  library(gbm)
+  data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
+  data['value_eur'] <- fifa20$target
+  gbm_model <- gbm::gbm(
+               formula = value_eur ~ .,
+               data = data,
+               distribution = "gaussian",
+               n.trees = 20,
+               interaction.depth = 4,
+               n.cores = 1)
+  unified_model <- gbm.unify(gbm_model, data)
+  shaps <- treeshap(unified_model, data[1:2,])
+  plot_contribution(shaps, obs = 1)
+}}
 }
 \seealso{
 \code{\link{lightgbm.unify}} for \code{\link[lightgbm:lightgbm]{LightGBM models}}

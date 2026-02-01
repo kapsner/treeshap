@@ -12,8 +12,6 @@
 #'
 #' @export
 #'
-#' @import data.table
-#'
 #' @seealso
 #'
 #' \code{\link{gbm.unify}} for \code{\link[gbm:gbm]{GBM models}}
@@ -26,26 +24,34 @@
 #'
 #' @examples
 #' \donttest{
-#' library(lightgbm)
-#' param_lgbm <- list(objective = "regression", max_depth = 2,
-#'                    force_row_wise = TRUE, num_iterations = 20)
-#' data_fifa <- fifa20$data[!colnames(fifa20$data) %in%
-#'              c('work_rate', 'value_eur', 'gk_diving', 'gk_handling',
-#'              'gk_kicking', 'gk_reflexes', 'gk_speed', 'gk_positioning')]
-#' data <- na.omit(cbind(data_fifa, fifa20$target))
-#' sparse_data <- as.matrix(data[,-ncol(data)])
-#' x <- lightgbm::lgb.Dataset(sparse_data, label = as.matrix(data[,ncol(data)]))
-#' lgb_data <- lightgbm::lgb.Dataset.construct(x)
-#' lgb_model <- lightgbm::lightgbm(data = lgb_data, params = param_lgbm,
-#'                                 verbose = -1, num_threads = 0)
-#' unified_model <- lightgbm.unify(lgb_model, sparse_data)
-#' shaps <- treeshap(unified_model, data[1:2, ])
-#' plot_contribution(shaps, obs = 1)
-#' }
+#' if (requireNamespace("lightgbm", quietly = TRUE) &&
+#'  requireNamespace("jsonlite", quietly = TRUE)) {
+#'   library(lightgbm)
+#'   param_lgbm <- list(objective = "regression", max_depth = 2,
+#'                      force_row_wise = TRUE, num_iterations = 20)
+#'   data_fifa <- fifa20$data[!colnames(fifa20$data) %in%
+#'                c('work_rate', 'value_eur', 'gk_diving', 'gk_handling',
+#'                'gk_kicking', 'gk_reflexes', 'gk_speed', 'gk_positioning')]
+#'   data <- na.omit(cbind(data_fifa, fifa20$target))
+#'   sparse_data <- as.matrix(data[,-ncol(data)])
+#'   x <- lightgbm::lgb.Dataset(sparse_data, label = as.matrix(data[,ncol(data)]))
+#'   lgb_data <- lightgbm::lgb.Dataset.construct(x)
+#'   lgb_model <- lightgbm::lightgbm(data = lgb_data, params = param_lgbm,
+#'                                   verbose = -1, num_threads = 0)
+#'   unified_model <- lightgbm.unify(lgb_model, sparse_data)
+#'   shaps <- treeshap(unified_model, data[1:2, ])
+#'   plot_contribution(shaps, obs = 1)
+#' }}
 lightgbm.unify <- function(lgb_model, data, recalculate = FALSE) {
   if (!requireNamespace("lightgbm", quietly = TRUE)) {
     stop("Package \"lightgbm\" needed for this function to work. Please install it.",
          call. = FALSE)
+  }
+  if (!requireNamespace("jsonlite", quietly = TRUE)) {
+    stop(
+      "Package \"jsonlite\" needed for this function to work. Please install it.",
+      call. = FALSE
+    )
   }
   df <- lightgbm::lgb.model.dt.tree(lgb_model)
   stopifnot(c("split_index", "split_feature", "node_parent", "leaf_index", "leaf_parent", "internal_value",
@@ -67,19 +73,58 @@ lightgbm.unify <- function(lgb_model, data, recalculate = FALSE) {
   # On the basis of column 'Parent', create columns with childs: 'Yes', 'No' and 'Missing' like in the xgboost df:
   ret.first <- function(x) x[1]
   ret.second <- function(x) x[2]
-  tmp <- data.table::merge.data.table(df[, .(node_parent, tree_index, split_index)], df[, .(tree_index, split_index, default_left, decision_type)],
-                                      by.x = c("tree_index", "node_parent"), by.y = c("tree_index", "split_index"))
-  y_n_m <- unique(tmp[, .(Yes = ifelse(decision_type %in% c("<=", "<"), ret.first(split_index),
-                                       ifelse(decision_type %in% c(">=", ">"), ret.second(split_index), stop("Unknown decision_type"))),
-                          No = ifelse(decision_type %in% c(">=", ">"), ret.first(split_index),
-                                      ifelse(decision_type %in% c("<=", "<"), ret.second(split_index), stop("Unknown decision_type"))),
-                          Missing = ifelse(default_left, ret.first(split_index),ret.second(split_index)),
-                          decision_type = decision_type),
-                      .(tree_index, node_parent)])
-  df <- data.table::merge.data.table(df[, c("tree_index", "depth", "split_index", "split_feature", "node_parent", "split_gain",
-                                            "threshold", "internal_value", "internal_count")],
-                                     y_n_m, by.x = c("tree_index", "split_index"),
-                                     by.y = c("tree_index", "node_parent"), all.x = TRUE)
+  tmp <- data.table::merge.data.table(
+    df[, .(node_parent, tree_index, split_index)],
+    df[, .(tree_index, split_index, default_left, decision_type)],
+    by.x = c("tree_index", "node_parent"),
+    by.y = c("tree_index", "split_index")
+  )
+  y_n_m <- unique(tmp[,
+    .(
+      Yes = ifelse(
+        decision_type %in% c("<=", "<"),
+        ret.first(split_index),
+        ifelse(
+          decision_type %in% c(">=", ">"),
+          ret.second(split_index),
+          stop("Unknown decision_type")
+        )
+      ),
+      No = ifelse(
+        decision_type %in% c(">=", ">"),
+        ret.first(split_index),
+        ifelse(
+          decision_type %in% c("<=", "<"),
+          ret.second(split_index),
+          stop("Unknown decision_type")
+        )
+      ),
+      Missing = ifelse(
+        default_left,
+        ret.first(split_index),
+        ret.second(split_index)
+      ),
+      decision_type = decision_type
+    ),
+    .(tree_index, node_parent)
+  ])
+  df <- data.table::merge.data.table(
+    df[, c(
+      "tree_index",
+      "depth",
+      "split_index",
+      "split_feature",
+      "node_parent",
+      "split_gain",
+      "threshold",
+      "internal_value",
+      "internal_count"
+    )],
+    y_n_m,
+    by.x = c("tree_index", "split_index"),
+    by.y = c("tree_index", "node_parent"),
+    all.x = TRUE
+  )
   df[decision_type == ">=", decision_type := "<"]
   df[decision_type == ">", decision_type := "<="]
   df$Decision.type <- factor(x = df$decision_type, levels = c("<=", "<"))

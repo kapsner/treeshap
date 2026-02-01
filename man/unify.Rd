@@ -21,22 +21,42 @@ Convert your tree-based model into a standardized representation.
 The returned representation is easy to be interpreted by the user and ready to be used as an argument in \code{treeshap()} function.
 }
 \examples{
+if (
+  requireNamespace("ranger", quietly = TRUE) &&
+    requireNamespace("randomForest", quietly = TRUE)
+) {
+  library(ranger)
+  data_fifa <- fifa20$data[
+    !colnames(fifa20$data) \%in\%
+      c(
+        'work_rate',
+        'value_eur',
+        'gk_diving',
+        'gk_handling',
+        'gk_kicking',
+        'gk_reflexes',
+        'gk_speed',
+        'gk_positioning'
+      )
+  ]
+  data <- na.omit(cbind(data_fifa, target = fifa20$target)) 
 
- library(ranger)
- data_fifa <- fifa20$data[!colnames(fifa20$data) \%in\%
-                            c('work_rate', 'value_eur', 'gk_diving', 'gk_handling',
-                             'gk_kicking', 'gk_reflexes', 'gk_speed', 'gk_positioning')]
- data <- na.omit(cbind(data_fifa, target = fifa20$target))
+  rf1 <- ranger::ranger(target ~ ., data = data, max.depth = 10, num.trees = 10)
+  unified_model1 <- unify(rf1, data)
+  shaps1 <- treeshap(unified_model1, data[1:2, ])
+  plot_contribution(shaps1, obs = 1) 
 
- rf1 <- ranger::ranger(target~., data = data, max.depth = 10, num.trees = 10)
- unified_model1 <- unify(rf1, data)
- shaps1 <- treeshap(unified_model1, data[1:2,])
- plot_contribution(shaps1, obs = 1)
+  rf2 <- randomForest::randomForest(
+    target ~ .,
+    data = data,
+    maxnodes = 10,
+    ntree = 10
+  )
+  unified_model2 <- unify(rf2, data)
+  shaps2 <- treeshap(unified_model2, data[1:2, ])
+  plot_contribution(shaps2, obs = 1)
+}
 
- rf2 <- randomForest::randomForest(target~., data = data, maxnodes = 10, ntree = 10)
- unified_model2 <- unify(rf2, data)
- shaps2 <- treeshap(unified_model2, data[1:2,])
- plot_contribution(shaps2, obs = 1)
 }
 \seealso{
 \code{\link{lightgbm.unify}} for \code{\link[lightgbm:lightgbm]{LightGBM models}}

@@ -45,8 +45,13 @@ library(treeshap)
 library(xgboost)
 data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
 target <- fifa20$target
-param <- list(objective = "reg:squarederror", max_depth = 6)
-xgb_model <- xgboost::xgboost(as.matrix(data), params = param, label = target, nrounds = 200, verbose = 0)
+xgb_model <- xgboost::xgboost(
+  x = as.matrix(data),
+  y = target,
+  objective = "reg:squarederror",
+  max_depth = 6,
+  nrounds = 200
+)
 unified <- unify(xgb_model, data)
 head(unified$model)
 ```
@@ -62,11 +67,22 @@ We can also compute SHAP values for interactions. As an example we will calculat
 
 ```{r interactions-example}
 data2 <- fifa20$data[, 1:5]
-xgb_model2 <- xgboost::xgboost(as.matrix(data2), params = param, label = target, nrounds = 200, verbose = 0)
+xgb_model2 <- xgboost::xgboost(
+  x = as.matrix(data),
+  y = target,
+  objective = "reg:squarederror",
+  max_depth = 6,
+  nrounds = 200
+)
 unified2 <- unify(xgb_model2, data2)
 
-treeshap_interactions <- treeshap(unified2,  data2[1:100, ], interactions = TRUE, verbose = 0)
-treeshap_interactions$interactions[, , 1:2]
+treeshap_interactions <- treeshap(
+  unified2,
+  data2[1:100, ],
+  interactions = TRUE,
+  verbose = 0
+)
+treeshap_interactions$interactions[,, 1:2]
 ```
 
 ## Plotting results

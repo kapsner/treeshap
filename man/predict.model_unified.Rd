@@ -21,17 +21,19 @@ Predict using unified_model representation.
 }
 \examples{
 \donttest{
-library(gbm)
-data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
-data['value_eur'] <- fifa20$target
-gbm_model <- gbm::gbm(
-  formula = value_eur ~ .,
-  data = data,
-  distribution = "laplace",
-  n.trees = 20,
-  interaction.depth = 4,
-  n.cores = 1)
+if (requireNamespace("gbm", quietly = TRUE)) {
+  library(gbm)
+  data <- fifa20$data[colnames(fifa20$data) != 'work_rate']
+  data['value_eur'] <- fifa20$target
+  gbm_model <- gbm::gbm(
+    formula = value_eur ~ .,
+    data = data,
+    distribution = "laplace",
+    n.trees = 20,
+    interaction.depth = 4,
+    n.cores = 1
+  )
   unified <- gbm.unify(gbm_model, data)
   predict(unified, data[2001:2005, ])
-  }
+}}
 }

@@ -25,9 +25,6 @@
 #'
 #' @return For `type = "risk"` a unified model representation is returned - a \code{\link{model_unified.object}} object. For `type = "survival"` or `type = "chf"` - a \code{\link{model_unified_multioutput.object}} object is returned, which is a list that contains unified model representation (\code{\link{model_unified.object}} object) for each time point. In this case, the list names are time points at which the survival function was evaluated.
 #'
-#' @import data.table
-#' @importFrom stats stepfun
-#'
 #' @export
 #'
 #' @seealso
@@ -42,39 +39,42 @@
 #' \code{\link{randomForest.unify}} for \code{\link[randomForest:randomForest]{randomForest models}}
 #'
 #' @examples
+#' if (requireNamespace("ranger", quietly = TRUE) &&
+#'  requireNamespace("survival", quietly = TRUE)) {
 #'
-#' library(ranger)
-#' data_colon <- data.table::data.table(survival::colon)
-#' data_colon <- na.omit(data_colon[get("etype") == 2, ])
-#' surv_cols <- c("status", "time", "rx")
-#'
-#' feature_cols <- colnames(data_colon)[3:(ncol(data_colon) - 1)]
-#'
-#' train_x <- model.matrix(
-#'   ~ -1 + .,
-#'   data_colon[, .SD, .SDcols = setdiff(feature_cols, surv_cols[1:2])]
-#' )
-#' train_y <- survival::Surv(
-#'   event = (data_colon[, get("status")] |>
-#'              as.character() |>
-#'              as.integer()),
-#'   time = data_colon[, get("time")],
-#'   type = "right"
-#' )
-#'
-#' rf <- ranger::ranger(
-#'   x = train_x,
-#'   y = train_y,
-#'   data = data_colon,
-#'   max.depth = 10,
-#'   num.trees = 10
-#' )
-#' unified_model_risk <- ranger_surv.unify(rf, train_x, type = "risk")
-#' shaps <- treeshap(unified_model_risk, train_x[1:2,])
-#'
-#' # compute shaps for 3 selected time points
-#' unified_model_surv <- ranger_surv.unify(rf, train_x, type = "survival", times = c(23, 50, 73))
-#' shaps_surv <- treeshap(unified_model_surv, train_x[1:2,])
+#'   library(ranger)
+#'   data_colon <- data.table::data.table(survival::colon)
+#'   data_colon <- na.omit(data_colon[get("etype") == 2, ])
+#'   surv_cols <- c("status", "time", "rx")
+#'  
+#'   feature_cols <- colnames(data_colon)[3:(ncol(data_colon) - 1)]
+#'  
+#'   train_x <- model.matrix(
+#'     ~ -1 + .,
+#'     data_colon[, .SD, .SDcols = setdiff(feature_cols, surv_cols[1:2])]
+#'   )
+#'   train_y <- survival::Surv(
+#'     event = (data_colon[, get("status")] |>
+#'                as.character() |>
+#'                as.integer()),
+#'     time = data_colon[, get("time")],
+#'     type = "right"
+#'   )
+#'  
+#'   rf <- ranger::ranger(
+#'     x = train_x,
+#'     y = train_y,
+#'     data = data_colon,
+#'     max.depth = 10,
+#'     num.trees = 10
+#'   )
+#'   unified_model_risk <- ranger_surv.unify(rf, train_x, type = "risk")
+#'   shaps <- treeshap(unified_model_risk, train_x[1:2,])
+#'  
+#'   # compute shaps for 3 selected time points
+#'   unified_model_surv <- ranger_surv.unify(rf, train_x, type = "survival", times = c(23  , 50, 73))
+#'   shaps_surv <- treeshap(unified_model_surv, train_x[1:2,])
+#' }
 #'
 ranger_surv.unify <- function(rf_model, data, type = c("risk", "survival", "chf"), times = NULL) {
   type <- match.arg(type)
@@ -166,4 +166,3 @@ ranger_surv.common <- function(rf_model, data) {
   })
   return(list(chf_table_list = chf_table_list, n = n))
 }
-
