@@ -61,6 +61,8 @@ if (
 \seealso{
 \code{\link{lightgbm.unify}} for \code{\link[lightgbm:lightgbm]{LightGBM models}}
 
+\code{\link{gpboost.unify}} for \code{\link[gpboost:gpboost]{GPBoost models}}
+
 \code{\link{gbm.unify}} for \code{\link[gbm:gbm]{GBM models}}
 
 \code{\link{xgboost.unify}} for \code{\link[xgboost:xgboost]{XGBoost models}}
